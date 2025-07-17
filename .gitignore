@@ -1,0 +1,23 @@
+# Archivos de entorno virtual
+venv/
+.env
+.venv
+
+# Archivos de base de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de claves
+claves/
+private.pem
+
+# Archivos generados por Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db

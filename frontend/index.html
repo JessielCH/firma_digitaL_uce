@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Firma Digital</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Pantalla de Login/Registro -->
+        <div id="auth-section" class="container">
+            <header>
+                <h1>🔏 Sistema de Firma Digital</h1>
+                <p>Firma y verifica documentos con certificados X.509</p>
+            </header>
+
+            <div class="tabs">
+                <button class="tab-button active" data-tab="login">Iniciar Sesión</button>
+                <button class="tab-button" data-tab="register">Registrarse</button>
+            </div>
+
+            <!-- Pestaña de Login -->
+            <div id="login" class="tab-content active">
+                <section class="card">
+                    <h2>🔑 Iniciar Sesión</h2>
+                    <div class="form-group">
+                        <label for="loginUsername">Usuario:</label>
+                        <input type="text" id="loginUsername" placeholder="Ingrese su usuario">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Contraseña:</label>
+                        <input type="password" id="loginPassword" placeholder="Ingrese su contraseña">
+                    </div>
+                    <button id="btnLogin">Iniciar Sesión</button>
+                    <div id="loginResult" class="result"></div>
+                </section>
+            </div>
+
+            <!-- Pestaña de Registro -->
+            <div id="register" class="tab-content">
+                <section class="card">
+                    <h2>👤 Registro de Usuario</h2>
+                    <div class="form-group">
+                        <label for="username">Nombre de usuario:</label>
+                        <input type="text" id="username" placeholder="Ingrese su usuario">
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Contraseña:</label>
+                        <input type="password" id="regPassword" placeholder="Cree una contraseña">
+                    </div>
+                    <button id="btnRegistrar">Registrarse</button>
+                    <div id="regResult" class="result"></div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Dashboard (oculto inicialmente) -->
+        <div id="dashboard-section" style="display: none;">
+            <div class="dashboard-header">
+                <h1>🔏 Panel de Firma Digital</h1>
+                <div class="user-info">
+                    <span id="currentUser"></span>
+                    <button id="btnLogout">Cerrar Sesión</button>
+                </div>
+            </div>
+
+            <div class="dashboard-tabs">
+                <button class="dash-tab-button active" data-tab="firmar">Firmar Documento</button>
+                <button class="dash-tab-button" data-tab="firmar-lotes">Firmar Lotes</button>
+                <button class="dash-tab-button" data-tab="verificar">Verificar Firma</button>
+                <button class="dash-tab-button" data-tab="certificado">Certificado</button>
+            </div>
+
+            <div class="dashboard-container">
+                <!-- Contenido de las pestañas del dashboard -->
+                <div id="firmar" class="dashboard-tab-content active">
+                    <section class="card">
+                        <h2>📝 Firmar Documento</h2>
+                        <div class="form-group">
+                            <label for="fileInput">Seleccionar archivo (PDF, XML, TXT):</label>
+                            <input type="file" id="fileInput">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contraseña de firma:</label>
+                            <input type="password" id="password" placeholder="Ingrese su contraseña">
+                        </div>
+                        <button id="btnFirmar">Firmar Documento</button>
+                        <div id="firmaResult" class="result"></div>
+                    </section>
+                </div>
+
+                <div id="firmar-lotes" class="dashboard-tab-content">
+                    <section class="card">
+                        <h2>📚 Firmar Múltiples Documentos</h2>
+                        <div class="form-group">
+                            <label for="batchFiles">Seleccionar archivos (múltiples):</label>
+                            <input type="file" id="batchFiles" multiple>
+                        </div>
+                        <div class="form-group">
+                            <label for="batchPassword">Contraseña de firma:</label>
+                            <input type="password" id="batchPassword" placeholder="Ingrese su contraseña">
+                        </div>
+                        <button id="btnFirmarLotes">Firmar Documentos</button>
+                        <div id="batchResult" class="result"></div>
+                    </section>
+                </div>
+
+                <div id="verificar" class="dashboard-tab-content">
+                    <section class="card">
+                        <h2>🔍 Verificar Firma</h2>
+                        <div class="form-group">
+                            <label for="verifyFile">Documento a verificar:</label>
+                            <input type="file" id="verifyFile">
+                        </div>
+                        <div class="form-group">
+                            <label for="usernameVerify">Usuario (firmante):</label>
+                            <input type="text" id="usernameVerify" placeholder="Ingrese el usuario firmante">
+                        </div>
+                        <div class="form-group">
+                            <label for="signature">Firma digital (hexadecimal):</label>
+                            <textarea id="signature" rows="4" placeholder="Pegue aquí la firma"></textarea>
+                        </div>
+                        <button id="btnVerificar">Verificar Firma</button>
+                        <div id="verificationResult" class="result"></div>
+                    </section>
+                </div>
+
+                <div id="certificado" class="dashboard-tab-content">
+                    <section class="card">
+                        <h2>📜 Información del Certificado</h2>
+                        <div class="form-group">
+                            <label for="usernameCert">Usuario:</label>
+                            <input type="text" id="usernameCert" placeholder="Ingrese el usuario">
+                        </div>
+                        <button id="btnCertInfo">Mostrar Detalles</button>
+                        <div id="certInfo" class="result"></div>
+                    </section>
+                </div>
+            </div>
+
+            <footer>
+                <p>Sistema de Firma Digital v4.0 | Certificados X.509 | RSA-2048</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Elementos DOM
+        const authSection = document.getElementById('auth-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const currentUserSpan = document.getElementById('currentUser');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnLogout = document.getElementById('btnLogout');
+        const btnRegistrar = document.getElementById('btnRegistrar');
+        const btnFirmar = document.getElementById('btnFirmar');
+        const btnFirmarLotes = document.getElementById('btnFirmarLotes');
+        const btnVerificar = document.getElementById('btnVerificar');
+        const btnCertInfo = document.getElementById('btnCertInfo');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const dashTabButtons = document.querySelectorAll('.dash-tab-button');
+
+        // Comprobar si hay un usuario logueado al cargar
+        const currentUser = sessionStorage.getItem('currentUser');
+        if (currentUser) {
+            showDashboard(currentUser);
+        }
+
+        // Funciones para cambiar pestañas (login/register)
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.getAttribute('data-tab');
+
+                // Ocultar todos los contenidos
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // Desactivar todos los botones
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+
+                // Mostrar el contenido de la pestaña seleccionada
+                document.getElementById(tabName).classList.add('active');
+                button.classList.add('active');
+            });
+        });
+
+        // Funciones para cambiar pestañas en el dashboard
+        dashTabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.getAttribute('data-tab');
+
+                // Ocultar todos los contenidos
+                document.querySelectorAll('.dashboard-tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                // Desactivar todos los botones
+                dashTabButtons.forEach(btn => btn.classList.remove('active'));
+
+                // Mostrar el contenido de la pestaña seleccionada
+                document.getElementById(tabName).classList.add('active');
+                button.classList.add('active');
+            });
+        });
+
+        // Función para mostrar el dashboard
+        function showDashboard(username) {
+            currentUserSpan.textContent = `Usuario: ${username}`;
+            authSection.style.display = 'none';
+            dashboardSection.style.display = 'block';
+        }
+
+        // Evento de login
+       btnLogin.addEventListener('click', async () => {
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+    const resultDiv = document.getElementById('loginResult');
+
+    if (!username || !password) {
+        resultDiv.innerHTML = '<div class="error">❌ Complete todos los campos</div>';
+        return;
+    }
+
+    try {
+        resultDiv.innerHTML = '<div class="loading">⏳ Iniciando sesión...</div>';
+
+        // Llamada a la API en lugar de usar el módulo db directamente
+        const response = await fetch('http://localhost:8000/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Guardar usuario en sessionStorage
+            sessionStorage.setItem('currentUser', username);
+            showDashboard(username);
+        } else {
+            throw new Error(data.detail || 'Error en la autenticación');
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+    }
+});
+        // Evento de logout
+        btnLogout.addEventListener('click', () => {
+            sessionStorage.removeItem('currentUser');
+            dashboardSection.style.display = 'none';
+            authSection.style.display = 'block';
+        });
+
+        // Registro de usuario
+        btnRegistrar.addEventListener('click', async () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('regPassword').value;
+            const resultDiv = document.getElementById('regResult');
+
+            if (!username || !password) {
+                resultDiv.innerHTML = '<div class="error">❌ Complete todos los campos</div>';
+                return;
+            }
+
+            try {
+                resultDiv.innerHTML = '<div class="loading">⏳ Registrando usuario...</div>';
+
+                const response = await fetch('http://localhost:8000/registrar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <p>✅ Usuario registrado correctamente</p>
+                            <button onclick="descargarCertificado('${username}')">Descargar Certificado</button>
+                        </div>
+                    `;
+                    // Cambiar a pestaña de login
+                    document.querySelectorAll('.tab-button')[0].click();
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ${data.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error de conexión: ${error.message}</div>`;
+            }
+        });
+
+        // Firmar documento individual
+        btnFirmar.addEventListener('click', async () => {
+            const username = sessionStorage.getItem('currentUser');
+            if (!username) {
+                alert('Por favor, inicie sesión primero');
+                return;
+            }
+
+            const fileInput = document.getElementById('fileInput');
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('firmaResult');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">❌ Seleccione un archivo</div>';
+                return;
+            }
+
+            if (!password) {
+                resultDiv.innerHTML = '<div class="error">❌ Ingrese su contraseña</div>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('username', username);
+            formData.append('password', password);
+
+            try {
+                resultDiv.innerHTML = '<div class="loading">⏳ Firmando documento...</div>';
+
+                const response = await fetch('http://localhost:8000/firmar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <p>✅ Documento firmado correctamente</p>
+                            <p><strong>Firmante:</strong> ${data.firmante}</p>
+                            <p><strong>Certificado:</strong> ${data.certificado_valido ? '✅ Válido' : '❌ Inválido'} - ${data.mensaje_certificado}</p>
+                            <p><strong>Válido desde:</strong> ${new Date(data.valido_desde).toLocaleString()}</p>
+                            <p><strong>Válido hasta:</strong> ${new Date(data.valido_hasta).toLocaleString()}</p>
+                            <p><strong>Firma:</strong> ${data.firma.substring(0, 64)}...</p>
+                            <button onclick="copiarFirma('${data.firma}')">Copiar Firma</button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${data.detail || 'Error desconocido'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error de conexión: ${error.message}</div>`;
+            }
+        });
+
+        // Firmar por lotes
+        btnFirmarLotes.addEventListener('click', async () => {
+            const username = sessionStorage.getItem('currentUser');
+            if (!username) {
+                alert('Por favor, inicie sesión primero');
+                return;
+            }
+
+            const fileInput = document.getElementById('batchFiles');
+            const password = document.getElementById('batchPassword').value;
+            const resultDiv = document.getElementById('batchResult');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">❌ Seleccione al menos un archivo</div>';
+                return;
+            }
+
+            if (!password) {
+                resultDiv.innerHTML = '<div class="error">❌ Ingrese su contraseña</div>';
+                return;
+            }
+
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('files', fileInput.files[i]);
+            }
+            formData.append('username', username);
+            formData.append('password', password);
+
+            try {
+                resultDiv.innerHTML = '<div class="loading">⏳ Firmando documentos...</div>';
+
+                const response = await fetch('http://localhost:8000/firmar-lotes', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    let html = '<div class="success"><p>✅ Documentos firmados correctamente</p>';
+                    data.resultados.forEach(doc => {
+                        html += `
+                            <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+                                <p><strong>Documento:</strong> ${doc.nombre}</p>
+                                <p><strong>Tamaño:</strong> ${doc.tamano} bytes</p>
+                                <p><strong>Certificado:</strong> ${doc.certificado_valido ? '✅ Válido' : '❌ Inválido'} - ${doc.mensaje_certificado}</p>
+                                <p><strong>Firma:</strong> ${doc.firma.substring(0, 32)}...</p>
+                                <button onclick="copiarFirma('${doc.firma}')">Copiar Firma</button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${data.detail || 'Error desconocido'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error de conexión: ${error.message}</div>`;
+            }
+        });
+
+        // Verificar firma
+        btnVerificar.addEventListener('click', async () => {
+            const fileInput = document.getElementById('verifyFile');
+            const username = document.getElementById('usernameVerify').value;
+            const signature = document.getElementById('signature').value.trim();
+            const resultDiv = document.getElementById('verificationResult');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">❌ Seleccione un archivo</div>';
+                return;
+            }
+
+            if (!username) {
+                resultDiv.innerHTML = '<div class="error">❌ Ingrese el usuario firmante</div>';
+                return;
+            }
+
+            if (!signature) {
+                resultDiv.innerHTML = '<div class="error">❌ Ingrese la firma digital</div>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('firma', signature);
+            formData.append('username', username);
+
+            try {
+                resultDiv.innerHTML = '<div class="loading">⏳ Verificando firma...</div>';
+
+                const response = await fetch('http://localhost:8000/verificar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.valido) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <p>✅ Firma válida</p>
+                            <p><strong>Firmante:</strong> ${data.firmante}</p>
+                            <p><strong>Certificado:</strong> ${data.certificado_valido ? '✅ Válido' : '❌ Inválido'} - ${data.mensaje_certificado}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Firma inválida</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error de conexión: ${error.message}</div>`;
+            }
+        });
+
+        // Obtener información del certificado
+        btnCertInfo.addEventListener('click', async () => {
+            const username = document.getElementById('usernameCert').value;
+            const resultDiv = document.getElementById('certInfo');
+
+            if (!username) {
+                resultDiv.innerHTML = '<div class="error">❌ Ingrese el usuario</div>';
+                return;
+            }
+
+            try {
+                resultDiv.innerHTML = '<div class="loading">⏳ Obteniendo información...</div>';
+
+                const response = await fetch(`http://localhost:8000/info-certificado/${username}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="cert-info">
+                            <p><strong>Emisor:</strong> ${data.emisor}</p>
+                            <p><strong>Sujeto:</strong> ${data.sujeto}</p>
+                            <p><strong>Válido desde:</strong> ${new Date(data.valido_desde).toLocaleString()}</p>
+                            <p><strong>Válido hasta:</strong> ${new Date(data.valido_hasta).toLocaleString()}</p>
+                            <p><strong>Número de serie:</strong> ${data.serial}</p>
+                            <p><strong>Algoritmo:</strong> ${data.algoritmo}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ${data.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+
+        // Funciones auxiliares
+        window.descargarCertificado = async (username) => {
+            try {
+                const response = await fetch(`http://localhost:8000/certificado/${username}`);
+                if (!response.ok) {
+                    throw new Error('Certificado no encontrado');
+                }
+                const certPem = await response.text();
+
+                const blob = new Blob([certPem], {type: 'application/x-pem-file'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${username}_certificado.pem`;
+                link.click();
+            } catch (error) {
+                alert(error.message);
+            }
+        };
+
+        window.copiarFirma = (firma) => {
+            navigator.clipboard.writeText(firma);
+            alert('Firma copiada al portapapeles');
+        };
+    </script>
+<!-- Agrega esto dentro del <body> -->
+<div id="watermark">
+    <span>Sistema desarrollado por:</span>
+    <span>Luis Achig - Jessiel Chasiguano-</span>
+    <span>Alejandro Chiliquinga - Alex Tituaña</span>
+    <span>© Derechos reservados</span>
+</div>
+</body>
+</html>

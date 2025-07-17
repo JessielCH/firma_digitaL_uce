@@ -1,0 +1,6 @@
+fastapi==0.104.1
+uvicorn==0.23.2
+python-multipart==0.0.6
+rsa==4.9
+bcrypt==4.1.2
+sqlite3-api
