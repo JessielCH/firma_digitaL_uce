@@ -23,7 +23,7 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 2. Instalar dependencias
+### 2. Instalar dependencias (Se encuentran en la carpeta backend)
 
 ```bash
 pip install -r requirements.txt
